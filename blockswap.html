@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Swap Boxes Game</title>
+<style>
+body {
+	text-align:center;
+	user-select: none;
+	background-color: #f5f5f5;
+}
+.container {
+	display: grid;
+	margin:auto;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	align-items: center;
+	display: flex;
+	text-align: center;
+	width: 400px;
+	height: 400px;
+	border: 1px solid black;
+}
+.box {
+	display: inline-block;
+	width: 80px;
+	height: 80px;
+	background-color: #fff;
+	border: 2px solid #333;
+	font-size: 48px;
+	text-align: center;
+	line-height: 80px;
+	cursor: pointer;
+	transition: all 0.1s ease-in-out;
+	margin: 10px;
+}
+.box.selected {
+	background-color: #fffca3;
+}
+.selected {
+	border: 2px solid #ffcc00;
+}
+@media screen and (max-width: 500px) {
+	.container {
+		max-width: 90%;
+	}
+  
+	.box {
+		width: 60px;
+		height: 60px;
+		font-size: 36px;
+		line-height: 60px;
+		margin: 5px;
+	}
+}
+#reshuffle{
+	background-color: #4CAF50;
+	border: none;
+	color: white;
+	padding: 15px;
+	text-align: center;
+	display: inline-block;
+	font-size: 16px;
+	margin: 20px;
+	cursor: pointer;
+	border-radius: 20px;
+	transition: all 0.3s;
+}
+#reshuffle:hover{
+	background-color:#60d965;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="box" id="00">A</div>
+<div class="box" id="01">B</div>
+<div class="box" id="02">C</div>
+<div class="box" id="10">D</div>
+<div class="box" id="11">E</div>
+<div class="box" id="12">F</div>
+<div class="box" id="20">G</div>
+<div class="box" id="21">H</div>
+<div class="box" id="22">I</div>
+</div>
+<h1 style="display:none;" id="won">You Won!</h1>
+<button id="reshuffle" onclick="reshuffle()">Reshuffle</button>
+<script>
+var world=setarrows();
+const boxes = document.querySelectorAll('.box');
+let selectedBox = null;
+const arrows=["↑","←","↓","→"];
+var drive=true;
+document.addEventListener("transitionend", function() {
+	drive=true;
+}, false);
+document.addEventListener("transitionstart", function() {
+	drive=false;
+}, false);
+boxes.forEach(box => {
+	let temp=(Math.floor(Math.random() * 3)+'')+(Math.floor(Math.random() * 3)+'');
+	let od=box.textContent;
+	box.textContent=document.getElementById(temp).textContent;
+	document.getElementById(temp).textContent=od;
+	box.addEventListener('click', () => {
+		if (drive){
+			if (selectedBox === null) {
+				selectedBox = box;
+				selectedBox.classList.add('selected');
+			} else {
+				const box1Rect = selectedBox.getBoundingClientRect();
+				const box2Rect = box.getBoundingClientRect();
+
+				selectedBox.animate(
+					[
+						{ transform: `translate(${box2Rect.left - box1Rect.left}px, ${box2Rect.top - box1Rect.top}px)` },
+						{ transform: 'none' }
+					],
+					{
+						duration: 300,
+						easing: 'ease-in-out'
+					}
+				);
+
+				box.animate(
+					[
+						{ transform: `translate(${box1Rect.left - box2Rect.left}px, ${box1Rect.top - box2Rect.top}px)` },
+						{ transform: 'none' }
+					],
+					{
+						duration: 300,
+						easing: 'ease-in-out'
+					}
+				);
+
+				setTimeout(() => {
+					swapBoxes(selectedBox, box);
+					selectedBox.classList.remove('selected');
+					selectedBox = null;
+					let chance=true;
+					let i=0;
+					let j=0;
+					boxes.forEach(box => {
+						if (box.innerHTML!=world[i+''+j]){
+							chance=false;
+						}
+						j=j+1
+						if (j>2){
+							j=0;
+							i=i+1;
+						}
+					});
+					if (chance){
+						document.getElementById("won").style.display="block";
+					}
+				}, 300);
+			}
+		}
+	});
+});
+function setarrows(){
+	let currentPos = [Math.floor(Math.random() * 4),Math.floor(Math.random() * 4)];
+	var world={"00":"0","01":"0","02":"0","10":"0","11":"0","12":"0","20":"0","21":"0","22":"0"};
+	let whill=true;
+	while (whill){
+		if (Math.floor(Math.random() * 4)==0 && currentPos[0]>0 && world[currentPos[0]+''+currentPos[1]]=="0"){
+			world[currentPos[0]+''+currentPos[1]]="↑";
+			currentPos[0]=currentPos[0]-1;
+		}else if (Math.floor(Math.random() * 3)==0 && currentPos[1]<2 && world[currentPos[0]+''+currentPos[1]]=="0"){
+			world[currentPos[0]+''+currentPos[1]]="→";
+			currentPos[1]=currentPos[1]+1;
+		}else if (Math.floor(Math.random() * 2)==0 && currentPos[0]<2 && world[currentPos[0]+''+currentPos[1]]=="0"){
+			world[currentPos[0]+''+currentPos[1]]="↓";
+			currentPos[0]=currentPos[0]+1;
+		}else if (Math.floor(Math.random() * 2)==0 && currentPos[1]>0 && world[currentPos[0]+''+currentPos[1]]=="0"){
+			world[currentPos[0]+''+currentPos[1]]="←";
+			currentPos[1]=currentPos[1]-1;
+		}else if (Object.values(world).indexOf('0')>-1){
+			world={"00":"0","01":"0","02":"0","10":"0","11":"0","12":"0","20":"0","21":"0","22":"0"};
+			currentPos = [Math.floor(Math.random() * 4),Math.floor(Math.random() * 4)];
+		}else{
+			whill=false;
+		}
+	}
+	for (const key in world) {
+		document.getElementById(key).innerHTML=world[key];
+	}
+	return world;
+}
+function reshuffle(){
+	setarrows();
+	selectedBox.classList.remove('selected');
+	selectedBox = null;
+}
+function swapBoxes(box1, box2) {
+	const temp = box1.textContent;
+	box1.textContent = box2.textContent;
+	box2.textContent = temp;
+}
+</script>
+</body>
+</html>
